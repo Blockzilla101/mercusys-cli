@@ -8,12 +8,22 @@ export default function (cmd: Command, client: ApiClient) {
             base.showHelp();
         })
         .command("connect", "Connect to WAN.")
-        .action(() => {
-            console.log("not implemented");
+        .action(async () => {
+            try {
+                await client.network.connectWan();
+                console.log("Connecting...");
+            } catch (e) {
+                console.error(e.stack);
+            }
         })
         .command("disconnect", "Disconnect from WAN.")
-        .action(() => {
-            console.log("not implemented");
+        .action(async () => {
+            try {
+                await client.network.disconnectWan();
+                console.log("Disconnected.");
+            } catch (e) {
+                console.error(e.stack);
+            }
         });
 
     cmd.command("wan", base);

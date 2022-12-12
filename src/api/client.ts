@@ -2,6 +2,7 @@ import axios from "https://deno.land/x/axiod@0.26.2/mod.ts";
 import { UserSession } from "./user-session.ts";
 import { Network } from "./network.ts";
 import * as Constants from "./constants.ts";
+import { AccessControl } from "./access-control.ts";
 
 interface ApiClientOptions {
     gatewayUrl: string;
@@ -11,6 +12,7 @@ interface ApiClientOptions {
 export class ApiClient {
     public session: UserSession;
     public network: Network;
+    public accessControl: AccessControl;
     public axios: typeof axios;
 
     constructor(opts: ApiClientOptions) {
@@ -21,12 +23,13 @@ export class ApiClient {
 
         this.session = new UserSession(this);
         this.network = new Network(this);
+        this.accessControl = new AccessControl(this);
     }
 
     public loggedIn(): boolean {
         try {
             this.session.key;
-        } catch (e) {
+        } catch (_e) {
             return false;
         }
         return true;

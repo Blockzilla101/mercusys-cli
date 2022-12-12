@@ -8,7 +8,7 @@ interface Session {
 }
 
 function encrypt(str: string, key = "RDpbLfCPsJZ7fiv", largeStr = "yLwVl0zKqws7LgKPRQ84Mdt708T1qQ3Ha7xv3H7NyU84p21BriUWBU43odz3iP4rBL3cD02KZciXTysVXiV8ngg6vL48rPJyAUw0HurW20xqxv9aYb4M9wK1Ae0wlro510qXeU07kV57fQMc8L6aLgMLwygtc0F10a0Dg70TOoouyFhdysuRMO51yY5ZlOZZLEal1h0t9YQW0Ko7oBwmCAHoic4HYbUyVeU3sfQ1xtXcPcf1aT303wAQhv66qzW") {
-    let largerStr = key.length < str.length ? str.length : key.length;
+    const largerStr = key.length < str.length ? str.length : key.length;
 
     let encrypted = "";
 
@@ -94,7 +94,7 @@ export class UserSession {
             this.loadSession();
             await this.login(this.session.password!, true);
         } catch (e) {
-            throw new Error("no session saved");
+            throw new Error("no session saved", { cause: e });
         }
     }
 

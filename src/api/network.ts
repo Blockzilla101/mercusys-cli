@@ -1,4 +1,3 @@
-import type { UserSession } from "./user-session.ts";
 import type { ApiClient } from "./client.ts";
 import * as Constants from "./constants.ts";
 
