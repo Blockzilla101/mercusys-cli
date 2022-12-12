@@ -1,0 +1,10 @@
+{
+  "fmt": {
+    "options": {
+      "indentWidth": 4,
+      "useTabs": false,
+      "singleQuote": false,
+      "lineWidth": 1000
+    }
+  }
+}
