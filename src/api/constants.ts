@@ -1,4 +1,4 @@
-export const SessionPath = "session.json";
+export const SessionPath = new URL("../../", import.meta.url).pathname + "session.json";
 
 /* HTTP Request Constants */
 export const SYN = 0;

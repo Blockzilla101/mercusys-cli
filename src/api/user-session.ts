@@ -54,8 +54,8 @@ export class UserSession {
         }
     }
 
-    public async login(password: string, encrypted = false, retried = false): Promise<void> {
-        if (this.session.authInfo.length === 0 || retried) {
+    public async login(password: string, encrypted = false): Promise<void> {
+        if (this.session.authInfo.length === 0) {
             await this.updateAuthInfo();
         }
 
@@ -79,13 +79,13 @@ export class UserSession {
                     case Constants.HTTP_CLIENT_TIMEOUT:
                         throw new Errors.UserSessionError("Timedout, login again");
                     case Constants.HTTP_CLIENT_PSWERR:
-                        console.log("pass err");
-                        return await this.login(password, encrypted, true);
+                        this.session.authInfo[0] = data[1];
+                        this.session.authInfo[1] = data[2];
+                        this.session.authInfo[2] = data[3];
+                        this.session.authInfo[3] = data[4];
+                        return await this.login(password, encrypted);
                     case Constants.HTTP_CLIENT_PSWIlegal:
-                        if (retried) {
-                            throw new Errors.UserSessionInvalidPassword();
-                        }
-                        return await this.login(password, encrypted, true);
+                        throw new Errors.UserSessionInvalidPassword();
                     case Constants.HTTP_CLIENT_INVALID:
                         throw new Errors.InternalError("Something else went wrong :/");
                     default:

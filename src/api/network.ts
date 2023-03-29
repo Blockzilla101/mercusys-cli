@@ -1,27 +1,37 @@
 import type { ApiClient } from "./client.ts";
 import * as Constants from "./constants.ts";
 
-interface NetworkStats {
+export interface NetworkStats {
     ip: string;
     mask: string;
     gateway: string;
-    dns: number;
-    status: number;
-    code: number;
+    status: NetworkStatus;
+    code: NetworkCode;
     upTime: number;
     inPkts: number;
-    inOctets: number;
     outPkts: number;
-    outOctets: number;
-    inRate: string;
-    outRate: string;
-    internetDnsDetect: number;
+    inRate: number;
+    outRate: number;
 }
 
-interface EthernetPortStats {
+export enum NetworkCode {
+    WanDisconnected = 4,
+}
+
+export enum NetworkStatus {
+    Disconnected = 0,
+    Connceted = 1,
+}
+
+export interface EthernetPortStats {
     connected: boolean;
     name: string;
     // mode: string
+}
+
+export enum WanConnectStatus {
+    Connecting = 0,
+    WanDisconnected = 53,
 }
 
 export class Network {
@@ -31,9 +41,8 @@ export class Network {
         const raw = await this.client.fetchData(Constants.LINK_STATUS_DATA_ID);
         const data: Record<string, string | number> = {};
         raw.forEach((r) => data[r.split(" ")[0]] = r.split(" ")[1].match(/^[0-9]+$/g) ? parseInt(r.split(" ")[1]) : r.split(" ")[1]);
-        data["inRate"] = `${data.inRates as number / 1000} KB/s`;
-        data["outRate"] = `${data.outRates as number / 1000} KB/s`;
-        Object.keys(data).forEach((d) => d.startsWith("dual") ? delete data[d] : null);
+
+        Object.keys(data).forEach((d) => d == "dns" || d.includes("internet") || d.includes("Oct") || d.startsWith("dual") ? delete data[d] : null);
 
         return data as unknown as NetworkStats;
     }
@@ -74,8 +83,7 @@ export class Network {
         await this.client.sendCommand("wan -linkDown");
     }
 
-    public async connectWan() {
-        const resp = await this.client.sendCommand("wan -linkUp");
-        // fixme: throw an error based on response code
+    public async connectWan(): Promise<WanConnectStatus> {
+        return parseInt(await this.client.sendCommand("wan -linkUp"));
     }
 }
