@@ -1,17 +1,15 @@
 import { Command } from "https://deno.land/x/cliffy@v0.25.5/command/mod.ts";
 import * as path from "https://deno.land/std@0.167.0/path/posix.ts";
 import { ApiClient } from "./api/client.ts";
+import * as Errors from './api/errors/mod.ts'
+import { UserSession } from "./api/user-session.ts";
 
 export const client = new ApiClient({
     gatewayUrl: "http://192.168.1.1",
     timeout: 1000,
 });
 
-try {
-    await client.session.reUseLastSession();
-} catch (e) {
-    console.debug("no saved session", e.stack);
-}
+await client.session.reUseLastSession();
 
 const cmd = new Command()
     .name("mercusys-cli")
@@ -29,4 +27,12 @@ for (const file of files) {
     (await import(path.join(srcRoot, "commands", file.name))).default(cmd, client);
 }
 
-await cmd.parse(Deno.args);
+try {
+    await cmd.parse(Deno.args);
+} catch (e) {
+    if (e instanceof Errors.UserSessionError) {
+        console.log(e.message)
+    } else {
+        throw e
+    }
+}

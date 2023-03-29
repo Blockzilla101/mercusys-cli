@@ -1,5 +1,7 @@
 import { ApiClient } from "./client.ts";
 import * as Constants from "./constants.ts";
+import * as Errors from "./errors/mod.ts"
+import { UserSessionInvalidPassword } from "./errors/user-session.ts";
 
 interface Session {
     key?: string;
@@ -71,18 +73,18 @@ export class UserSession {
             if (parseInt(data[0]) !== 0) {
                 switch (parseInt(data[1])) {
                     case Constants.HTTP_CLIENT_FULL:
-                        throw new Error("Client is full");
+                        throw new Errors.UserSessionServerFull();
                     case Constants.HTTP_CLIENT_LOCK:
-                        throw new Error("Locked after many invalid attempts");
+                        throw new Errors.UserSessionLocked();
                     case Constants.HTTP_CLIENT_TIMEOUT:
-                        throw new Error("Timedout, login again");
+                        throw new Errors.UserSessionError("Timedout, login again");
                     case Constants.HTTP_CLIENT_PSWERR:
                     case Constants.HTTP_CLIENT_PSWIlegal:
-                        throw new Error("Invalid Password");
+                        throw new Errors.UserSessionInvalidPassword();
                     case Constants.HTTP_CLIENT_INVALID:
-                        throw new Error("Something else went wrong :/");
+                        throw new Errors.InternalError("Something else went wrong :/");
                     default:
-                        throw new Error("Something went very wrong");
+                        throw new Errors.InternalError("Something went very wrong");
                 }
             }
         }
@@ -90,28 +92,40 @@ export class UserSession {
 
     public async reUseLastSession() {
         try {
-            await Deno.stat("session.json");
+            await Deno.stat(Constants.SessionPath);
             this.loadSession();
             await this.login(this.session.password!, true);
         } catch (e) {
-            throw new Error("no session saved", { cause: e });
+            if (e instanceof UserSessionInvalidPassword) {
+                this.invalidateSession()
+                console.log('Invalid Password')
+                Deno.exit(1)
+            }
+
+            if (e.message.includes('No such file')) return;
+
+            throw new Error("something went wrong while reading session", { cause: e });
         }
     }
 
     public loadSession() {
         try {
-            this.session = JSON.parse(Deno.readTextFileSync("session.json"));
+            this.session = JSON.parse(Deno.readTextFileSync(Constants.SessionPath));
         } catch (e) {
             console.debug("cant read last session file: ", e.stack);
         }
     }
 
+    public invalidateSession() {
+        Deno.removeSync(Constants.SessionPath)
+    }
+
     public saveSession() {
-        Deno.writeTextFileSync("session.json", JSON.stringify(this.session, null, 2));
+        Deno.writeTextFileSync(Constants.SessionPath, JSON.stringify(this.session, null, 2));
     }
 
     public get key(): string {
-        if (this.session.key == null) throw new Error("Not logged in");
+        if (this.session.key == null) throw new Errors.UserSessionNotLoggedIn();
         return this.session.key;
     }
 }

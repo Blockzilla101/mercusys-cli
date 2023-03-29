@@ -1,3 +1,5 @@
+export const SessionPath = 'session.json'
+
 /* HTTP Request Constants */
 export const SYN = 0;
 export const ASYN = 1;
