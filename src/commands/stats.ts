@@ -4,7 +4,8 @@ import type { ApiClient } from "../api/client.ts";
 export default function (cmd: Command, client: ApiClient) {
     cmd.command("stats", "Disaply WAN netork statistics.")
         .action(async () => {
-            const stats = await client.network.PPOEStats();
-            console.log(stats);
+            const stats = await client.network.networkStats();
+            const ports = await client.network.ethernetPorts();
+            console.log(stats, ports);
         });
 }

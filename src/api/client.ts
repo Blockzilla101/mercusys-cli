@@ -39,7 +39,7 @@ export class ApiClient {
     // fixme: map layer to ids
     public async fetchData(dataId: number, layer = [1, 0, 0]): Promise<string[]> {
         const response = await this.axios.post(`?code=${Constants.HTTP_READ}&asyn=1&id=${encodeURIComponent(this.session.key)}`, `${dataId}|${layer.join(",")}`);
-        if (response.status !== 200) throw new Error(`Received code: ${response.status}`, { cause: response })
+        if (response.status !== 200) throw new Error(`Received code: ${response.status}`, { cause: response });
         return response.data.trim().split(/\r?\n/g).slice(2);
     }
 

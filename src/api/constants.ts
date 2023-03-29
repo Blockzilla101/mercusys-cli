@@ -1,4 +1,4 @@
-export const SessionPath = 'session.json'
+export const SessionPath = "session.json";
 
 /* HTTP Request Constants */
 export const SYN = 0;

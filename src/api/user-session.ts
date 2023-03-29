@@ -1,6 +1,6 @@
 import { ApiClient } from "./client.ts";
 import * as Constants from "./constants.ts";
-import * as Errors from "./errors/mod.ts"
+import * as Errors from "./errors/mod.ts";
 import { UserSessionInvalidPassword } from "./errors/user-session.ts";
 
 interface Session {
@@ -54,8 +54,8 @@ export class UserSession {
         }
     }
 
-    public async login(password: string, encrypted = false) {
-        if (this.session.authInfo.length === 0) {
+    public async login(password: string, encrypted = false, retried = false): Promise<void> {
+        if (this.session.authInfo.length === 0 || retried) {
             await this.updateAuthInfo();
         }
 
@@ -79,8 +79,13 @@ export class UserSession {
                     case Constants.HTTP_CLIENT_TIMEOUT:
                         throw new Errors.UserSessionError("Timedout, login again");
                     case Constants.HTTP_CLIENT_PSWERR:
+                        console.log("pass err");
+                        return await this.login(password, encrypted, true);
                     case Constants.HTTP_CLIENT_PSWIlegal:
-                        throw new Errors.UserSessionInvalidPassword();
+                        if (retried) {
+                            throw new Errors.UserSessionInvalidPassword();
+                        }
+                        return await this.login(password, encrypted, true);
                     case Constants.HTTP_CLIENT_INVALID:
                         throw new Errors.InternalError("Something else went wrong :/");
                     default:
@@ -97,12 +102,12 @@ export class UserSession {
             await this.login(this.session.password!, true);
         } catch (e) {
             if (e instanceof UserSessionInvalidPassword) {
-                this.invalidateSession()
-                console.log('Invalid Password')
-                Deno.exit(1)
+                this.invalidateSession();
+                console.log("Invalid Password");
+                Deno.exit(1);
             }
 
-            if (e.message.includes('No such file')) return;
+            if (e.message.includes("No such file")) return;
 
             throw new Error("something went wrong while reading session", { cause: e });
         }
@@ -117,7 +122,7 @@ export class UserSession {
     }
 
     public invalidateSession() {
-        Deno.removeSync(Constants.SessionPath)
+        Deno.removeSync(Constants.SessionPath);
     }
 
     public saveSession() {
