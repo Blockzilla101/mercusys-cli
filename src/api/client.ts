@@ -48,6 +48,10 @@ export class ApiClient {
         return response.data.trim().split(/\r?\n/g).join("\n");
     }
 
+    public async sendReboot() {
+        await this.fetchData(Constants.HTTP_REBOOT);
+    }
+
     public async updateData(data: string): Promise<void> {
         await this.axios.post(`?code=${Constants.SYN}&asyn=0&id=${encodeURIComponent(this.session.key)}`, data);
     }

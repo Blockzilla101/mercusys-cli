@@ -2,12 +2,12 @@ import { Command } from "https://deno.land/x/cliffy@v0.25.5/command/mod.ts";
 import type { ApiClient } from "../api/client.ts";
 
 export default function (cmd: Command, client: ApiClient) {
-    cmd.command("login", "Save password for logging in to the router.")
+    cmd.command("reboot", "Restart the router.")
         .arguments("<password:string>")
-        .action(async (_, password) => {
+        .action(async () => {
             try {
-                await client.session.login(password);
-                console.log("Logged in!");
+                await client.sendReboot();
+                console.log("Rebooting!");
             } catch (e) {
                 console.log(e.message);
             }
