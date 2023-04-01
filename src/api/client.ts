@@ -1,6 +1,6 @@
 import axios from "https://deno.land/x/axiod@0.26.2/mod.ts";
 import { UserSession } from "./user-session.ts";
-import { Network } from "./network.ts";
+import { Wan } from "./wan.ts";
 import * as Constants from "./constants.ts";
 import { AccessControl } from "./access-control.ts";
 
@@ -11,7 +11,7 @@ interface ApiClientOptions {
 
 export class ApiClient {
     public session: UserSession;
-    public network: Network;
+    public wan: Wan;
     public accessControl: AccessControl;
     public axios: typeof axios;
 
@@ -22,7 +22,7 @@ export class ApiClient {
         });
 
         this.session = new UserSession(this);
-        this.network = new Network(this);
+        this.wan = new Wan(this);
         this.accessControl = new AccessControl(this);
     }
 

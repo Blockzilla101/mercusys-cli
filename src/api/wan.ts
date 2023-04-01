@@ -1,12 +1,12 @@
 import type { ApiClient } from "./client.ts";
 import * as Constants from "./constants.ts";
 
-export interface NetworkStats {
+export interface WanStats {
     ip: string;
     mask: string;
     gateway: string;
-    status: NetworkStatus;
-    code: NetworkCode;
+    status: WanStatus;
+    code: WanCode;
     upTime: number;
     inPkts: number;
     outPkts: number;
@@ -14,11 +14,11 @@ export interface NetworkStats {
     outRates: number;
 }
 
-export enum NetworkCode {
+export enum WanCode {
     WanDisconnected = 4,
 }
 
-export enum NetworkStatus {
+export enum WanStatus {
     Disconnected = 0,
     Connceted = 1,
 }
@@ -34,17 +34,17 @@ export enum WanConnectStatus {
     WanDisconnected = 53,
 }
 
-export class Network {
+export class Wan {
     constructor(public client: ApiClient) {}
 
-    public async networkStats(): Promise<NetworkStats> {
+    public async stats(): Promise<WanStats> {
         const raw = await this.client.fetchData(Constants.LINK_STATUS_DATA_ID);
         const data: Record<string, string | number> = {};
         raw.forEach((r) => data[r.split(" ")[0]] = r.split(" ")[1].match(/^[0-9]+$/g) ? parseInt(r.split(" ")[1]) : r.split(" ")[1]);
 
         Object.keys(data).forEach((d) => d == "dns" || d.includes("internet") || d.includes("Oct") || d.startsWith("dual") ? delete data[d] : null);
 
-        return data as unknown as NetworkStats;
+        return data as unknown as WanStats;
     }
 
     public async ethernetPorts() {
@@ -79,11 +79,11 @@ export class Network {
         return ethPorts;
     }
 
-    public async disconnectWan() {
+    public async disconnect() {
         await this.client.sendCommand("wan -linkDown");
     }
 
-    public async connectWan(): Promise<WanConnectStatus> {
+    public async connect(): Promise<WanConnectStatus> {
         return parseInt(await this.client.sendCommand("wan -linkUp"));
     }
 }
