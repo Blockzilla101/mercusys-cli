@@ -12,7 +12,7 @@ await client.session.reUseLastSession();
 
 const cmd = new Command()
     .name("mercusys-cli")
-    .version("0.0.1")
+    .version("0.1.0")
     .description("Command line interface for mercusys MW306R.")
     .action(() => {
         cmd.showHelp();
