@@ -1,6 +1,6 @@
 import { Command } from "https://deno.land/x/cliffy@v0.25.5/command/mod.ts";
 import type { ApiClient } from "../api/client.ts";
-import { WanConnectStatus } from "../api/network.ts";
+import { NetworkStatus, WanConnectStatus } from "../api/network.ts";
 
 export default function (cmd: Command, client: ApiClient) {
     const base = new Command()
@@ -36,7 +36,20 @@ export default function (cmd: Command, client: ApiClient) {
         .action(async () => {
             const stats = await client.network.networkStats();
             const ports = await client.network.ethernetPorts();
-            console.log(stats, ports);
+            console.log("=> Ports:");
+            for (const port of ports) {
+                console.log(`  - ${port.name}: ${port.connected}`);
+            }
+            console.log();
+            console.log(`=> Wan: ${stats.status == NetworkStatus.Connceted ? "Connected" : "Disconnected"}`);
+            if (stats.status === NetworkStatus.Connceted) {
+                console.log(`  - IP/Gateway/Mask: ${stats.ip} / ${stats.gateway} / ${stats.mask}`);
+                console.log(`  - Uptime: ${Math.trunc(stats.upTime / 1000)}s`);
+            } else {
+                console.log(`  - Code: ${stats.code}`);
+            }
+            console.log(`  - Packets In/Out: ${stats.inPkts} / ${stats.outPkts}`);
+            console.log(`  - Rate In/Out: ${stats.inRates} / ${stats.outRates}`);
         });
 
     cmd.command("wan", base);

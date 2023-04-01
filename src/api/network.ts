@@ -10,8 +10,8 @@ export interface NetworkStats {
     upTime: number;
     inPkts: number;
     outPkts: number;
-    inRate: number;
-    outRate: number;
+    inRates: number;
+    outRates: number;
 }
 
 export enum NetworkCode {

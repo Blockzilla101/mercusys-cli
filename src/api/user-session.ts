@@ -1,7 +1,7 @@
 import { ApiClient } from "./client.ts";
 import * as Constants from "./constants.ts";
 import * as Errors from "./errors/mod.ts";
-import { UserSessionInvalidPassword } from "./errors/user-session.ts";
+import { UserSessionInvalidPassword, UserSessionLocked } from "./errors/user-session.ts";
 
 interface Session {
     key?: string;
@@ -57,7 +57,7 @@ export class UserSession {
         }
     }
 
-    public async login(password: string, encrypted = false): Promise<void> {
+    public async login(password: string, encrypted = false, retry = false): Promise<void> {
         if (this.session.authInfo.length === 0 || this.session.loginTime + 60 * 1000 < Date.now()) {
             await this.updateAuthInfo();
         }
@@ -82,18 +82,21 @@ export class UserSession {
                     case Constants.HTTP_CLIENT_TIMEOUT:
                         throw new Errors.UserSessionError("Timedout, login again");
                     case Constants.HTTP_CLIENT_PSWERR:
-                        this.session.authInfo[0] = data[1];
-                        this.session.authInfo[1] = data[2];
-                        this.session.authInfo[2] = data[3];
-                        this.session.authInfo[3] = data[4];
-                        return await this.login(password, encrypted);
+                        if (!retry) {
+                            this.session.authInfo[0] = data[1];
+                            this.session.authInfo[1] = data[2];
+                            this.session.authInfo[2] = data[3];
+                            this.session.authInfo[3] = data[4];
+                            return await this.login(password, encrypted, true);
+                        }
+                        break;
                     case Constants.HTTP_CLIENT_PSWIlegal:
                         throw new Errors.UserSessionInvalidPassword();
                     case Constants.HTTP_CLIENT_INVALID:
                         throw new Errors.InternalError("Something else went wrong :/");
-                    default:
-                        throw new Errors.InternalError("Something went very wrong");
                 }
+                console.error(err.stack);
+                throw new Errors.InternalError("Something went very wrong");
             }
         }
     }
@@ -104,9 +107,9 @@ export class UserSession {
             this.loadSession();
             await this.login(this.session.password!, true);
         } catch (e) {
-            if (e instanceof UserSessionInvalidPassword) {
+            if (e instanceof UserSessionInvalidPassword || e instanceof UserSessionLocked) {
                 this.invalidateSession();
-                console.log("Invalid Password");
+                console.log(e.message);
                 Deno.exit(1);
             }
 
