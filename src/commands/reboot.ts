@@ -3,7 +3,6 @@ import type { ApiClient } from "../api/client.ts";
 
 export default function (cmd: Command, client: ApiClient) {
     cmd.command("reboot", "Restart the router.")
-        .arguments("<password:string>")
         .action(async () => {
             try {
                 await client.sendReboot();

@@ -7,6 +7,7 @@ interface Session {
     key?: string;
     authInfo: string[];
     password?: string;
+    loginTime: number;
 }
 
 function encrypt(str: string, key = "RDpbLfCPsJZ7fiv", largeStr = "yLwVl0zKqws7LgKPRQ84Mdt708T1qQ3Ha7xv3H7NyU84p21BriUWBU43odz3iP4rBL3cD02KZciXTysVXiV8ngg6vL48rPJyAUw0HurW20xqxv9aYb4M9wK1Ae0wlro510qXeU07kV57fQMc8L6aLgMLwygtc0F10a0Dg70TOoouyFhdysuRMO51yY5ZlOZZLEal1h0t9YQW0Ko7oBwmCAHoic4HYbUyVeU3sfQ1xtXcPcf1aT303wAQhv66qzW") {
@@ -37,6 +38,7 @@ function encrypt(str: string, key = "RDpbLfCPsJZ7fiv", largeStr = "yLwVl0zKqws7L
 export class UserSession {
     private session: Session = {
         authInfo: [],
+        loginTime: -1,
     };
 
     constructor(public client: ApiClient) {}
@@ -44,6 +46,7 @@ export class UserSession {
     private async updateAuthInfo() {
         try {
             await this.client.axios.post(`?code=${Constants.HTTP_AUTH}&asyn=0`);
+            this.session.loginTime = Date.now();
         } catch (err) {
             const text = err.response.data.trim().split(/\r?\n/g);
             if (text.length === 0) throw new Error("server did not respond with keys");
@@ -55,7 +58,7 @@ export class UserSession {
     }
 
     public async login(password: string, encrypted = false): Promise<void> {
-        if (this.session.authInfo.length === 0) {
+        if (this.session.authInfo.length === 0 || this.session.loginTime + 60 * 1000 < Date.now()) {
             await this.updateAuthInfo();
         }
 
